@@ -1,0 +1,100 @@
+# Your business on one page. Front Desk answers ONLY from what is written here.
+# Every price, time and link in a reply draft is checked against this file before
+# the draft is saved. If a draft mentions anything that is not here, it is thrown
+# away and the inquiry is flagged for you instead.
+#
+# No passwords or API keys go in this file. Those come from environment variables.
+
+[business]
+name = "Ridgeline Climbing Studio"
+about = "An indoor climbing gym with bouldering, top-rope walls, kids programs and birthday parties."
+address = "120 Harbor Street"
+hours = "Mon-Fri 6:00 AM - 10:00 PM, Sat-Sun 8:00 AM - 8:00 PM"
+booking_link = "https://ridgeline-climbing.example.com/book"
+waiver_link = "https://ridgeline-climbing.example.com/waiver"
+waiver_note = "Everyone climbing needs a signed waiver before their first visit. A parent or guardian signs for anyone under 18."
+tone = "warm, plain and short. Sounds like a person at the front desk, not a company."
+signoff = "Thanks,\nAlex\nRidgeline Climbing Studio"
+# A reply never commits to these. If someone asks about one, or a draft mentions
+# one, the inquiry is flagged for you instead.
+never_promise = ["discount", "refund", "guarantee", "price match"]
+# Emails from your booking system. When one arrives, Front Desk marks that
+# customer as booked so they get no follow-ups. It never writes to the system.
+booking_notices_from = ["bookings@ridgeline-climbing.example.com"]
+
+[[classes]]
+name = "Kids Climb Club"
+ages = "6-12"
+audience = "kids"
+level = "No experience needed"
+schedule = ["Saturday 9:00 AM", "Wednesday 4:30 PM"]
+length = "60 minutes"
+price = "$25 per class, or $90 for a 4-class pack"
+note = "Shoes and harness included."
+
+[[classes]]
+name = "Teen Team"
+ages = "13-17"
+audience = "teens"
+level = "Some climbing experience"
+schedule = ["Tuesday 5:30 PM", "Thursday 5:30 PM"]
+length = "90 minutes"
+price = "$120 per month"
+note = ""
+
+[[classes]]
+name = "Intro to Bouldering"
+ages = "18+"
+audience = "adults"
+level = "First-timers"
+schedule = ["Monday 7:00 PM", "Saturday 11:00 AM"]
+length = "75 minutes"
+price = "$30, shoe rental included"
+note = "Comes with a free week of open climbing afterwards."
+
+[[classes]]
+name = "Yoga for Climbers"
+ages = "16+"
+audience = "adults"
+level = "All levels"
+schedule = ["Sunday 10:00 AM"]
+length = "60 minutes"
+price = "$18 drop-in, or included with an Unlimited membership"
+note = ""
+
+[pricing]
+day_pass = "$22 adult, $16 kids under 13"
+shoe_rental = "$5"
+memberships = "Unlimited $79 per month, 10-visit punch card $180"
+
+[parties]
+slots = ["Saturday 1:00 PM", "Saturday 3:30 PM", "Sunday 1:00 PM", "Sunday 3:30 PM"]
+deposit = "$100 deposit holds the date, and it counts toward the total"
+packages = [
+  "Base Camp: $300 for up to 10 kids, 90 minutes (60 climbing with a coach, 30 in the party room)",
+  "Summit: $425 for up to 16 kids, 2 hours (90 climbing, 30 in the party room), pizza and drinks included",
+]
+extra_child = "$20 per extra child"
+ages = "Ages 5 and up"
+note = "Bring your own cake. Every child needs a waiver signed by a parent before the party."
+
+[private_lessons]
+price = "$70 for one hour, or $195 for a pack of 3"
+who = "Any age and level. One coach, up to 2 climbers."
+how_to_book = "Pick a time with any coach on the booking page."
+
+[policies]
+cancellation = "Cancel up to 24 hours before a class for a full credit."
+parking = "Free parking behind the building."
+what_to_wear = "Comfortable clothes you can stretch in. We rent shoes."
+
+[agent]
+model = "claude-sonnet-5-5"
+gmail_folder = "INBOX"
+lookback_days = 2
+log_file = "inquiries.csv"
+follow_up_days = [2, 5]
+
+[agent.labels]
+drafted = "AI/Draft ready"
+flagged = "AI/Needs you"

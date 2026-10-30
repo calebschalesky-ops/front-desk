@@ -1,0 +1,14 @@
+From: Ridgeline Bookings <bookings@ridgeline-climbing.example.com>
+To: Ridgeline Climbing Studio <hello@ridgeline-climbing.example.com>
+Subject: New booking: Private lesson
+Date: Thu, 29 Oct 2026 09:00:00 -0700
+Message-ID: <sample-08-booking-notice@example.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+A new booking was made on your booking page.
+
+Customer: Priya Nair
+Customer email: priya.nair@example.org
+Booked: Private lesson (1 hour)

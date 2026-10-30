@@ -1,0 +1,9 @@
+﻿date,name,email,topic,status,note,follow_ups,last_follow_up,subject,message_id
+2026-10-29 21:04,Dana,dana.whitfield@example.org,class,draft ready,,2,2026-11-03,Kids class on Saturdays?,<sample-01-saturday-kids@example.com>
+2026-10-27 19:12,Marcus,m.reyes@example.net,birthday party,draft ready,,2,2026-11-03,Birthday party in December,<sample-02-birthday-party@example.com>
+2026-10-27 10:30,Priya,priya.nair@example.org,private lesson,booked,,0,,One-on-one coaching,<sample-03-private-lesson@example.com>
+2026-10-28 12:15,Glen,glen.okafor@example.com,pricing,draft ready,,2,2026-11-03,Day pass or membership?,<sample-04-pricing@example.com>
+2026-10-28 08:40,Sofia,sofia.m@example.net,schedule,draft ready,,2,2026-11-03,Sunday hours,<sample-05-schedule@example.com>
+2026-10-28 17:20,Jordan,jordan.lee@example.org,pricing,needs you,"they ask about ""discount"", which is on your never-promise list",0,,Two kids for Climb Club,<sample-06-sibling-discount@example.com>
+2026-10-29 14:02,Party Planning,events@party-deals.example.net,birthday party,needs you,"this email tries to give instructions to an AI, so no draft was written",0,,Party booking question,<sample-07-injection@example.com>
+2026-10-29 11:45,Erin Walsh,erin.walsh@example.com,other,needs you,"not covered by your info file: Do you host corporate team-building events, and what are the options/pricing for a group of about 40 people on a weekday evening?",0,,Team-building event,<sample-09-corporate-event@example.com>
