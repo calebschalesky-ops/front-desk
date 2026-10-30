@@ -1,6 +1,6 @@
 import pytest
 
-from front_desk.desk import (CLASS, DRAFTED, FLAGGED, OTHER, PARTY, PRICING, PRIVATE, SCHEDULE,
+from front_desk.desk import (CLASS, DRAFTED, FLAGGED, OTHER, PARTIAL, PARTY, PRICING, PRIVATE, SCHEDULE,
                              handle, rules)
 
 EXPECTED = {
@@ -72,11 +72,35 @@ def test_model_draft_that_checks_out_is_kept(biz, sample, fake_model):
     assert res.status == DRAFTED and res.draft == reply
 
 
-def test_model_saying_unanswered_produces_a_flag(biz, sample, fake_model):
-    model = fake_model({"topic": "other"}, reply="We'd love to host you!",
-                       unanswered=["corporate events for 40 people"])
+def test_nothing_answerable_produces_a_flag_and_no_draft(biz, sample, fake_model):
+    model = fake_model({"topic": "other"}, reply="", unanswered=["corporate events for 40 people"])
     res = handle(sample("09-corporate-event"), biz, client=model)
     assert res.status == FLAGGED and "corporate events" in res.note and res.draft is None
+
+
+def test_a_holding_reply_with_no_facts_is_a_flag_not_a_partial(biz, sample, fake_model):
+    # What Claude actually wrote for the corporate event in a real run.
+    reply = ("Hi Erin,\n\nThanks for reaching out! I don't have details on hand about corporate "
+             "team-building events for a group that size, so let me check on that and get back to you.")
+    model = fake_model({"topic": "other"}, reply=reply, unanswered=["corporate events for 40 people"])
+    res = handle(sample("09-corporate-event"), biz, client=model)
+    assert res.status == FLAGGED and res.draft is None and "corporate events" in res.note
+
+
+def test_partly_answerable_gets_a_draft_and_still_needs_the_owner(biz, sample, fake_model):
+    reply = ("Hi Marcus,\n\nSummit is $425 for up to 16 kids, and Saturday 1:00 PM is open. "
+             f"I'll check on cupcakes and get back to you.\n\n{biz.signoff}")
+    model = fake_model({"topic": "birthday party"}, reply=reply, unanswered=["can they bring cupcakes"])
+    res = handle(sample("02-birthday-party"), biz, client=model)
+    assert res.status == PARTIAL and res.draft == reply
+    assert "cupcakes" in res.note and "you'll check" in res.note
+
+
+def test_partial_draft_still_goes_through_the_guard(biz, sample, fake_model):
+    model = fake_model({"topic": "birthday party"}, reply="Summit is $40. I'll check on cupcakes.",
+                       unanswered=["cupcakes"])
+    res = handle(sample("02-birthday-party"), biz, client=model)
+    assert res.status == FLAGGED and "$40" in res.note and res.draft is None
 
 
 def test_unreadable_model_reply_is_a_flag(biz, sample, fake_model):

@@ -17,7 +17,7 @@ from pathlib import Path
 
 from . import guard
 from .config import Business
-from .desk import BOOKED, DRAFTED, Result
+from .desk import BOOKED, OPEN, Result
 
 COLUMNS = ["date", "name", "email", "topic", "status", "note", "follow_ups", "last_follow_up",
            "subject", "message_id"]
@@ -57,7 +57,7 @@ def add(rows: list[dict], res: Result) -> dict:
 def mark_booked(rows: list[dict], notice_body: str, biz: Business) -> list[dict]:
     """A booking-system email names the customer. Mark their open inquiries booked."""
     addrs = {a.lower() for a in EMAIL_RE.findall(notice_body)} - biz.booking_notices_from
-    hit = [r for r in rows if r["email"].lower() in addrs and r["status"] == DRAFTED]
+    hit = [r for r in rows if r["email"].lower() in addrs and r["status"] in OPEN]
     for r in hit:
         r["status"] = BOOKED
     return hit
@@ -67,7 +67,7 @@ def due(rows: list[dict], today: dt.date, days: list[int]) -> list[tuple[dict, i
     """Rows that need their next follow-up today, with which one (1, 2, ...)."""
     out = []
     for r in rows:
-        if r["status"] != DRAFTED:
+        if r["status"] not in OPEN:
             continue
         done = int(r["follow_ups"] or 0)
         if done >= len(days):
@@ -91,7 +91,7 @@ def follow_up_text(row: dict, n: int, biz: Business) -> str:
                 f"Spots are booked here: {biz.booking_link}. If the timing isn't right, no problem "
                 f"at all, and we'd be glad to see you whenever it works.")
     text = f"Hi {name},\n\n{body}\n\n{biz.signoff}"
-    v = guard.check(text, biz.facts_text, never_promise=biz.never_promise)
+    v = guard.check(text, biz.facts_text, never_promise=biz.never_promise, items=biz.items)
     if not v.ok:  # the info file changed under us; never save a follow-up that fails the check
         raise ValueError("; ".join(v.problems))
     return text

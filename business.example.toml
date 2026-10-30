@@ -22,8 +22,11 @@ never_promise = ["discount", "refund", "guarantee", "price match"]
 # customer as booked so they get no follow-ups. It never writes to the system.
 booking_notices_from = ["bookings@ridgeline-climbing.example.com"]
 
+# aliases: other names people use for the class. The price check uses them to
+# tell which class a sentence is about.
 [[classes]]
 name = "Kids Climb Club"
+aliases = ["Climb Club", "kids class"]
 ages = "6-12"
 audience = "kids"
 level = "No experience needed"
@@ -34,6 +37,7 @@ note = "Shoes and harness included."
 
 [[classes]]
 name = "Teen Team"
+aliases = ["teen class"]
 ages = "13-17"
 audience = "teens"
 level = "Some climbing experience"
@@ -44,6 +48,7 @@ note = ""
 
 [[classes]]
 name = "Intro to Bouldering"
+aliases = ["intro class", "bouldering class"]
 ages = "18+"
 audience = "adults"
 level = "First-timers"
@@ -54,6 +59,7 @@ note = "Comes with a free week of open climbing afterwards."
 
 [[classes]]
 name = "Yoga for Climbers"
+aliases = ["yoga"]
 ages = "16+"
 audience = "adults"
 level = "All levels"

@@ -35,11 +35,14 @@ CLASS, PARTY, PRIVATE, PRICING, SCHEDULE, OTHER = (
     "class", "birthday party", "private lesson", "pricing", "schedule", "other")
 TOPICS = [CLASS, PARTY, PRIVATE, PRICING, SCHEDULE, OTHER]
 DRAFTED, FLAGGED, BOOKED = "draft ready", "needs you", "booked"
+PARTIAL = "needs you, draft ready"   # part answered from the file, part left for the owner
+OPEN = (DRAFTED, PARTIAL)            # a reply went out (once approved), so follow-ups apply
 
 TOPIC_RULES = [
     (PARTY, re.compile(r"\b(birthday|party|parties)\b", re.I)),
     (PRIVATE, re.compile(r"\b(private|one[- ]on[- ]one|1[- ]on[- ]1|personal (coach|lesson|training))\b", re.I)),
-    (CLASS, re.compile(r"\b(class(es)?|lessons?|club|teen team|kids?|beginners?|intro|yoga)\b", re.I)),
+    (CLASS, re.compile(r"\b(class(es)?|lessons?|club|teen team|kids?|child(ren)?|son|daughter|"
+                       r"teen(ager)?s?|beginners?|intro|yoga)\b", re.I)),
     (PRICING, re.compile(r"\b(price|prices|pricing|cost|how much|membership|day pass|punch card|fees?|rates?)\b", re.I)),
     (SCHEDULE, re.compile(r"\b(hours|open|close|what time|when)\b", re.I)),
 ]
@@ -53,7 +56,7 @@ INJECTION_RE = re.compile(
 DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 AUDIENCE_RE = [
     ("kids", re.compile(r"\b(kids?|child(ren)?|son|daughter|\d\s?-?year-?old|ages? [5-9]|ages? 1[0-2])\b", re.I)),
-    ("teens", re.compile(r"\b(teens?|teenager|1[3-7]-?year-?old|high school)\b", re.I)),
+    ("teens", re.compile(r"\b(teen(ager)?s?|1[3-7]-?year-?old|high school(er)?s?)\b", re.I)),
     ("adults", re.compile(r"\b(adults?|beginners?|first[- ]time|never climbed|myself|intro|yoga)\b", re.I)),
 ]
 
@@ -182,8 +185,11 @@ and sends it themselves.
 
 Everything you may say about the business is in the INFO FILE below. It is the only source of \
 truth. Do not state any price, time, day, link, age limit, policy or offer that is not written \
-there word for word. Do not promise anything about: {never_promise}. If a question is not \
-answered by the info file, do not guess: list it under "unanswered".
+there word for word. Quote prices exactly as written: do not add them up, work out totals or \
+per-visit costs, or compare them with arithmetic. Do not promise anything about: {never_promise}. If a question is not \
+answered by the info file, do not guess: say in the reply that you'll check on that and get back \
+to them, and list it under "unanswered". If none of their questions are answered by the info \
+file, leave "reply" empty.
 
 Tone: {tone}
 Keep the reply under 150 words, plain text, no subject line. Include the booking link when it \
@@ -238,17 +244,24 @@ def handle(msg: Message, biz: Business, client=None) -> Result:
             out = compose(client, biz, res.summary, msg.subject)
         except Exception as e:
             return res.flag(f"the model reply could not be read ({e}); answer this one yourself")
-        if out.get("unanswered"):
-            return res.flag("not covered by your info file: " + "; ".join(out["unanswered"]))
+        unanswered = [str(q) for q in out.get("unanswered") or []]
         draft = (out.get("reply") or "").strip()
+        # A reply that leaves questions open must answer something from the file (a price,
+        # time or link). A pure "let me check" is no answer, and should not get follow-ups.
+        answers = guard.money(draft) | guard.times(draft) | guard.urls(draft)
+        if unanswered and not answers:
+            return res.flag("not covered by your info file: " + "; ".join(unanswered))
     else:
-        draft = template_draft(res, biz)
+        unanswered, draft = [], template_draft(res, biz)
     if not draft:
         return res.flag("Front Desk could not match this question to anything in your info file")
 
     v = guard.check(draft, biz.facts_text, customer_text=f"{msg.subject}\n{msg.body}",
-                    never_promise=biz.never_promise)
+                    never_promise=biz.never_promise, items=biz.items)
     if not v.ok:
         return res.flag("draft thrown away: " + "; ".join(v.problems))
     res.draft = draft
+    if unanswered:   # answered what the file covers; the owner settles the rest
+        res.status = PARTIAL
+        res.note = "not in your info file, so the draft says you'll check: " + "; ".join(unanswered)
     return res

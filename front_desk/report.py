@@ -3,25 +3,26 @@ from __future__ import annotations
 
 import datetime as dt
 
-from .desk import DRAFTED, FLAGGED
+from .desk import DRAFTED, FLAGGED, PARTIAL
 
 
 def _line(r) -> str:
     out = f"- **{r.msg.subject}** from {r.name} ({r.topic})"
-    if r.status == FLAGGED:
+    if r.status in (FLAGGED, PARTIAL):
         out += f"\n  - Why: {r.note}"
         out += "".join(f"\n    > {s[:160]}" for s in r.suspicious)
-    elif r.draft_location:
+    if r.draft_location:
         out += "\n  - Reply draft is waiting for you"
     return out
 
 
 def render(results, booked, follow_ups, biz, used: str, today: dt.date, log_path: str) -> str:
     drafted = [r for r in results if r.status == DRAFTED]
-    flagged = [r for r in results if r.status == FLAGGED]
+    flagged = [r for r in results if r.status in (FLAGGED, PARTIAL)]
+    with_draft = sum(1 for r in results if r.draft)
     lines = [f"# Front Desk summary for {biz.name}, {today:%A %B %d}", "",
-             f"{len(results)} new inquiries. {len(drafted)} reply drafts are waiting for you. "
-             f"{len(flagged)} flagged for you to answer. {len(follow_ups)} follow-up drafts. "
+             f"{len(results)} new inquiries. {with_draft} reply drafts are waiting for you. "
+             f"{len(flagged)} need you. {len(follow_ups)} follow-up drafts. "
              f"Nothing was sent.", ""]
     if flagged:
         lines += [f"## Needs you ({len(flagged)})", ""] + [_line(r) for r in flagged] + [""]

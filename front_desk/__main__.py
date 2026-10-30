@@ -3,6 +3,7 @@
 Usage:
   python -m front_desk demo  [--out DIR] [--llm MODE]                 run on ./samples, no account needed
   python -m front_desk run   [--info FILE] [--dry-run] [--llm MODE]   run on your Gmail inbox
+  python -m front_desk ask   "QUESTION" [--name NAME] [--llm MODE]    answer one typed question, live
 
 --llm is auto (default), api, cli or offline:
   api      Anthropic API, needs ANTHROPIC_API_KEY
@@ -61,6 +62,21 @@ def follow_ups(box, biz, rows, today: dt.date, dry_run=False):
     return done
 
 
+def ask(question: str, name: str, biz, client, used: str) -> str:
+    """One typed question through the full pipeline, for showing it off live. Saves nothing."""
+    msg = Message(msg_id="<ask@example.com>", sender=f"{name} <customer@example.com>",
+                  subject=question.split("?")[0][:60].strip() + ("?" if "?" in question else ""),
+                  body=question, date=dt.datetime.now())
+    res = handle(msg, biz, client)
+    head = f"Topic: {res.topic}   Status: {res.status}   ({used})"
+    if res.draft:
+        note = f"\nFor the owner: {res.note}" if res.note else ""
+        return (f"{head}{note}\nEvery price, time and link below was checked against the info file."
+                f"\n\n{res.draft}")
+    quoted = "".join(f"\n  > {s[:160]}" for s in res.suspicious)
+    return f"{head}\n\nNo draft. Flagged for the owner: {res.note}{quoted}"
+
+
 def from_addr(biz) -> str:
     return biz.gmail_user or f"{biz.name} <frontdesk@example.com>"
 
@@ -68,7 +84,9 @@ def from_addr(biz) -> str:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="front_desk", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("mode", choices=["demo", "run"])
+    p.add_argument("mode", choices=["demo", "run", "ask"])
+    p.add_argument("question", nargs="?", help="ask: the customer's message, in quotes")
+    p.add_argument("--name", default="Sam Rivera", help="ask: who the message is from")
     p.add_argument("--info", default=str(ROOT / "business.example.toml"), help="your business info file")
     p.add_argument("--out", default="out", help="demo: where drafts, the log and the summary go")
     p.add_argument("--llm", default="auto", choices=["auto", "api", "cli", "offline"])
@@ -80,6 +98,11 @@ def main(argv=None) -> int:
     client = llm.pick("offline" if a.offline else a.llm, biz.model)
     used = f"Claude via the {client.name}" if client else "offline templates (no model)"
 
+    if a.mode == "ask":
+        if not a.question:
+            p.error('ask needs the question in quotes, e.g. ask "Do you do birthday parties?"')
+        print(ask(a.question, a.name, biz, client, used))
+        return 0
     if a.mode == "demo":
         out = Path(a.out)
         log_path = out / "inquiries.csv"

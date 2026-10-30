@@ -1,0 +1,15 @@
+$ python -m front_desk ask "Hi! My twins turn 7 next month. Could we do a climbing party on a Sunday for about 14 kids? What would it cost and can we bring cupcakes?" --name "Ana Ruiz" --llm cli
+
+Topic: birthday party   Status: needs you, draft ready   (Claude via the Claude Code CLI)
+For the owner: not in your info file, so the draft says you'll check: Can they bring cupcakes instead of a cake?
+Every price, time and link below was checked against the info file.
+
+Hi Ana, happy almost-birthday to the twins! Yes, we can do a Sunday party for 14 kids - we have slots at 1:00 PM and 3:30 PM. For that group size, our Summit package fits best: $425 for up to 16 kids, 2 hours (90 minutes climbing, 30 in the party room), with pizza and drinks included. A $100 deposit holds the date and counts toward the total.
+
+We ask that you bring your own cake, so let me check on whether cupcakes work instead and get back to you.
+
+Every child will need a waiver signed by a parent before the party: https://ridgeline-climbing.example.com/waiver. You can book the date here: https://ridgeline-climbing.example.com/book
+
+Thanks,
+Alex
+Ridgeline Climbing Studio

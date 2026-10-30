@@ -1,6 +1,6 @@
 # Front Desk summary for Ridgeline Climbing Studio, Thursday October 29
 
-8 new inquiries. 5 reply drafts are waiting for you. 3 flagged for you to answer. 8 follow-up drafts. Nothing was sent.
+8 new inquiries. 5 reply drafts are waiting for you. 3 need you. 8 follow-up drafts. Nothing was sent.
 
 ## Needs you (3)
 

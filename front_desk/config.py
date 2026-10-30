@@ -10,6 +10,8 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .guard import Item
+
 
 @dataclass
 class Business:
@@ -38,6 +40,7 @@ class Business:
     labels: dict[str, str] = field(default_factory=lambda: {
         "drafted": "AI/Draft ready", "flagged": "AI/Needs you"})
     max_body_chars: int = 6000
+    items: list[Item] = field(default_factory=list)
     source_text: str = ""   # the raw file, which is what every draft is checked against
 
     @property
@@ -61,6 +64,35 @@ class Business:
         return "\n".join(keep)
 
 
+def _flat(value) -> str:
+    if isinstance(value, dict):
+        return " ".join(_flat(v) for v in value.values())
+    if isinstance(value, list):
+        return " ".join(_flat(v) for v in value)
+    return str(value)
+
+
+def build_items(biz: Business) -> list[Item]:
+    """Each thing on the page with its own prices and times, for the pairing check in guard.py."""
+    items = [Item(c["name"], [c["name"], *c.get("aliases", [])], _flat(c)) for c in biz.classes]
+    p = biz.parties
+    if p:
+        shared = _flat({k: v for k, v in p.items() if k != "packages"})
+        items.append(Item("the party packages", ["party", "parties", "birthday"], _flat(p)))
+        for pkg in p.get("packages", []):
+            name = pkg.split(":")[0].strip()
+            items.append(Item(name, [name], f"{pkg} {shared}"))
+    if biz.private_lessons:
+        items.append(Item("private lessons", ["private lesson", "private lessons", "one-on-one"],
+                          _flat(biz.private_lessons)))
+    if biz.pricing:
+        items.append(Item("passes and memberships", ["day pass", "membership", "punch card", "shoe rental"],
+                          _flat(biz.pricing)))
+    if biz.hours:
+        items.append(Item("opening hours", ["our hours", "we're open", "we are open"], biz.hours))
+    return items
+
+
 def load(path: str | Path) -> Business:
     text = Path(path).read_text(encoding="utf-8")
     data = tomllib.loads(text)
@@ -72,6 +104,7 @@ def load(path: str | Path) -> Business:
     biz.classes = data.get("classes", [])
     for k in ("pricing", "parties", "private_lessons", "policies"):
         setattr(biz, k, data.get(k, {}))
+    biz.items = build_items(biz)
     agent = data.get("agent", {})
     biz.labels.update(agent.get("labels", {}))
     for k in ("model", "gmail_folder", "lookback_days", "log_file", "follow_up_days", "max_body_chars"):

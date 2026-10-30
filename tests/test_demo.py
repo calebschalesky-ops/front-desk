@@ -1,4 +1,5 @@
 import csv
+import subprocess
 import re
 from pathlib import Path
 
@@ -12,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 def test_demo_runs_end_to_end_offline(tmp_path):
     assert main(["demo", "--offline", "--out", str(tmp_path)]) == 0
     report = (tmp_path / "report.md").read_text(encoding="utf-8")
-    assert "8 new inquiries. 5 reply drafts are waiting for you. 3 flagged" in report
+    assert "8 new inquiries. 5 reply drafts are waiting for you. 3 need you." in report
     assert "8 follow-up drafts. Nothing was sent." in report
     assert "## Booked (1)" in report and "Priya Nair" in report
     drafts = sorted(p.name for p in (tmp_path / "drafts").iterdir())
@@ -52,10 +53,17 @@ PERSONAL_PATHS = re.compile(r"[A-Za-z]:[\\/]+Users[\\/]|/Users/[a-z]|/home/[a-z]
 
 
 def _repo_files():
-    for f in ROOT.rglob("*"):
-        rel = f.relative_to(ROOT)
-        if f.is_file() and not (set(rel.parts) & SKIP_DIRS) and not rel.parts[0].startswith("out"):
-            yield f
+    """Every file that would be published: tracked, plus new files git is not ignoring."""
+    try:
+        listed = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+                                cwd=ROOT, capture_output=True, text=True, check=True).stdout.split("\n")
+        files = [ROOT / p for p in listed if p]
+    except (OSError, subprocess.CalledProcessError):   # not a git checkout (e.g. a zip download)
+        files = [f for f in ROOT.rglob("*") if not (set(f.relative_to(ROOT).parts) & SKIP_DIRS)
+                 and not f.relative_to(ROOT).parts[0].startswith(("out", ".coverage"))]
+    files = [f for f in files if f.is_file()]
+    assert len(files) > 20
+    return files
 
 
 def test_no_personal_paths_keys_or_session_ids():

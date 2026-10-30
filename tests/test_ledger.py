@@ -2,7 +2,7 @@ import csv
 import datetime as dt
 
 from front_desk import ledger
-from front_desk.desk import BOOKED, handle
+from front_desk.desk import BOOKED, PARTIAL, handle
 
 
 def _rows(biz, sample, *names):
@@ -44,6 +44,13 @@ def test_no_follow_ups_for_booked_or_flagged(biz, sample):
     assert [r["name"] for r in ledger.mark_booked(rows, notice.body, biz)] == ["Priya Nair"]
     assert rows[0]["status"] == BOOKED
     assert ledger.due(rows, dt.date(2026, 12, 1), [2, 5]) == []
+
+
+def test_partial_drafts_get_follow_ups_and_can_be_booked(biz, sample):
+    rows = _rows(biz, sample, "03-private-lesson")
+    rows[0]["status"] = PARTIAL
+    assert [n for _, n in ledger.due(rows, dt.date(2026, 10, 29), [2, 5])] == [1]
+    assert ledger.mark_booked(rows, "Customer email: priya.nair@example.org", biz) == rows
 
 
 def test_owner_can_stop_follow_ups_by_editing_the_sheet(biz, sample):

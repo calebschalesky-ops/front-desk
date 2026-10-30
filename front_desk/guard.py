@@ -7,7 +7,11 @@ Every draft, whoever wrote it, passes through check() before it is saved:
 - every link must appear in the business info file,
 - every other number must appear in the info file or in the customer's own email
   (so "your party on the 12th" is fine, "up to 30 kids" is not),
-- no word from the never-promise list (discount, refund, ...) may appear.
+- no word from the never-promise list (discount, refund, ...) may appear,
+- a price or time in a sentence that names a class, package or pass must
+  belong to that item. "Kids Climb Club is $30" fails even though $30 is on
+  the page, because $30 is the adult class's price. A sentence that names
+  nothing inherits the last item named earlier in the same paragraph.
 
 If anything fails, the draft is not saved. The inquiry is flagged for the owner
 with a note saying exactly what the draft got wrong. This runs in plain Python
@@ -55,6 +59,41 @@ def _fmt_time(minutes: int) -> str:
 
 
 @dataclass
+class Item:
+    """One thing on the info page (a class, the party packages, the passes) and its own facts."""
+    name: str
+    aliases: list[str]
+    text: str
+
+    def named_in(self, sentence: str) -> bool:
+        low = sentence.lower()
+        return any(re.search(rf"\b{re.escape(a.lower())}\b", low) for a in self.aliases)
+
+
+SENTENCE_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z(])|\n")
+
+
+def _pairing(draft: str, items, file_money: set, file_times: set) -> list[str]:
+    problems = []
+    for para in re.split(r"\n\s*\n", draft):
+        current = None
+        for sentence in SENTENCE_RE.split(para):
+            named = [it for it in items if it.named_in(sentence)]
+            scope = named or ([current] if current else [])
+            current = named[0] if len(named) == 1 else (None if named else current)
+            if not scope:
+                continue
+            label = " / ".join(it.name for it in scope)
+            for amount in sorted((money(sentence) & file_money) - set().union(*(money(it.text) for it in scope))):
+                problems.append(f"the draft gives {label} the price ${amount:,.2f}".replace(".00", "")
+                                + ", which the info file lists for something else")
+            for t in sorted((times(sentence) & file_times) - set().union(*(times(it.text) for it in scope))):
+                problems.append(f"the draft gives {label} the time {_fmt_time(t)}, "
+                                "which the info file lists for something else")
+    return problems
+
+
+@dataclass
 class Verdict:
     problems: list[str] = field(default_factory=list)
 
@@ -63,7 +102,7 @@ class Verdict:
         return not self.problems
 
 
-def check(draft: str, facts: str, customer_text: str = "", never_promise=()) -> Verdict:
+def check(draft: str, facts: str, customer_text: str = "", never_promise=(), items=()) -> Verdict:
     """Compare a draft against the info file. Returns every problem found."""
     v = Verdict()
     for amount in sorted(money(draft) - money(facts)):
@@ -81,4 +120,5 @@ def check(draft: str, facts: str, customer_text: str = "", never_promise=()) -> 
     for term in never_promise:
         if term.lower() in low:
             v.problems.append(f'the draft mentions "{term}", which is on the never-promise list')
+    v.problems += _pairing(draft, items, money(facts), times(facts))
     return v
