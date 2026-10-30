@@ -90,7 +90,7 @@ Front Desk also flags, without drafting:
 
 - **Questions your info file does not answer.** The model must list anything it cannot answer from the file, and anything on that list turns the inquiry into a flag.
 - **Anything on your never-promise list.** A parent asking for a sibling discount gets a flag, so you decide.
-- **Emails that try to give an AI orders.** Like [inbox-agent](https://github.com/calebschalesky-ops/inbox-agent), it reads mail in two separate steps. The first only fills in a form (who, which topic, what they asked). The second writes the reply from that form and your info file, and never sees the original email. A pattern check runs too, before any model sees the email, so a model that misses the trick does not open the door. The sample inbox has one of these hidden in invisible HTML: it asks the AI to quote the Summit package at $40.
+- **Emails that try to give an AI orders.** Like inbox-agent, it reads mail in two separate steps. The first only fills in a form (who, which topic, what they asked). The second writes the reply from that form and your info file, and never sees the original email. A pattern check runs too, before any model sees the email, so a model that misses the trick does not open the door. The sample inbox has one of these hidden in invisible HTML: it asks the AI to quote the Summit package at $40.
 
 ## Try it in two minutes
 
@@ -160,7 +160,7 @@ Schedule that command every 15 minutes with Task Scheduler or cron and replies a
 
 ## Where this comes from
 
-It is built on [inbox-agent](https://github.com/calebschalesky-ops/inbox-agent), my Gmail triage agent, and shares its mail code and its two-step defence against prompt injection. Front Desk adds the info file, the fact check, the inquiry sheet and the follow-ups.
+It is built on inbox-agent, my Gmail triage agent, and shares its mail code and its two-step defence against prompt injection. Front Desk adds the info file, the fact check, the inquiry sheet and the follow-ups.
 
 I build tools like this for small businesses. If you want one set up for your inquiries, or something like it for a different part of your day, my profile has a way to reach me: [github.com/calebschalesky-ops](https://github.com/calebschalesky-ops).
 
